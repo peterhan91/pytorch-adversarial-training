@@ -5,7 +5,7 @@ def parser():
     parser.add_argument('--todo', choices=['train', 'valid', 'test', 'visualize'], default='train',
         help='what behavior want to do: train | valid | test | visualize')
     parser.add_argument('--dataset', default='cifar-10', help='use what dataset')
-    parser.add_argument('--data_root', default='/home/yilin/Data', 
+    parser.add_argument('--data_root', default='/media/tianyu.han/mri-scratch/DeepLearning/ImageNet/CIFAR', 
         help='the directory to save the dataset')
     parser.add_argument('--log_root', default='log', 
         help='the directory to save the logs or other imformations (e.g. images)')
@@ -21,7 +21,7 @@ def parser():
     parser.add_argument('--k', '-k', type=int, default=10, 
         help='maximum iteration when generating adversarial examples')
 
-    parser.add_argument('--batch_size', '-b', type=int, default=128, help='batch size')
+    parser.add_argument('--batch_size', '-b', type=int, default=512, help='batch size')
     parser.add_argument('--max_epoch', '-m_e', type=int, default=200, 
         help='the maximum numbers of the model see a sample')
     parser.add_argument('--learning_rate', '-lr', type=float, default=1e-2, help='learning rate')
@@ -29,7 +29,7 @@ def parser():
         help='the parameter of l2 restriction for weights')
 
     parser.add_argument('--gpu', '-g', default='0', help='which gpu to use')
-    parser.add_argument('--n_eval_step', type=int, default=100, 
+    parser.add_argument('--n_eval_step', type=int, default=50, 
         help='number of iteration per one evaluation')
     parser.add_argument('--n_checkpoint_step', type=int, default=4000, 
         help='number of iteration to save a checkpoint')

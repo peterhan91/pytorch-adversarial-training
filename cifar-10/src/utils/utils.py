@@ -92,6 +92,7 @@ def create_logger(save_path='', file_type='', level='debug'):
 
 def makedirs(path):
     if not os.path.exists(path):
+        print(path)
         os.makedirs(path)
 
 def load_model(model, file_name):

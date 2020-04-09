@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 import torchvision as tv
+from torchvision import models
 
 from time import time
 from src.model.madry_model import WideResNet
@@ -47,9 +48,12 @@ class Trainer():
                     # close point to the original data point. If in evaluation mode, 
                     # just start from the original data point.
                     adv_data = self.attack.perturb(data, label, 'mean', True)
-                    output = model(adv_data, _eval=False)
+                    # output = model(adv_data, _eval=False)
+                    output = model(adv_data)
                 else:
-                    output = model(data, _eval=False)
+                    # output = model(data, _eval=False)
+                    model.train()
+                    output = model(data)
 
                 loss = F.cross_entropy(output, label)
 
@@ -62,7 +66,9 @@ class Trainer():
 
                     if adv_train:
                         with torch.no_grad():
-                            stand_output = model(data, _eval=True)
+                            model.eval()
+                            stand_output = model(data)
+                            # stand_output = model(data, _eval=True)
                         pred = torch.max(stand_output, dim=1)[1]
 
                         # print(pred)
@@ -77,7 +83,9 @@ class Trainer():
                         adv_data = self.attack.perturb(data, label, 'mean', False)
 
                         with torch.no_grad():
-                            adv_output = model(adv_data, _eval=True)
+                            model.eval()
+                            adv_output = model(adv_data)
+                            # adv_output = model(adv_data, _eval=True)
                         pred = torch.max(adv_output, dim=1)[1]
                         # print(label)
                         # print(pred)
@@ -144,8 +152,9 @@ class Trainer():
         with torch.no_grad():
             for data, label in loader:
                 data, label = tensor2cuda(data), tensor2cuda(label)
-
-                output = model(data, _eval=True)
+                model.eval()
+                output = model(data)
+                # output = model(data, _eval=True)
 
                 pred = torch.max(output, dim=1)[1]
                 te_acc = evaluate(pred.cpu().numpy(), label.cpu().numpy(), 'sum')
@@ -160,8 +169,9 @@ class Trainer():
                                                        pred if use_pseudo_label else label, 
                                                        'mean', 
                                                        False)
-
-                    adv_output = model(adv_data, _eval=True)
+                    model.eval()
+                    adv_output = model(adv_data)
+                    # adv_output = model(adv_data, _eval=True)
 
                     adv_pred = torch.max(adv_output, dim=1)[1]
                     adv_acc = evaluate(adv_pred.cpu().numpy(), label.cpu().numpy(), 'sum')
@@ -188,7 +198,10 @@ def main(args):
 
     print_args(args, logger)
 
-    model = WideResNet(depth=34, num_classes=10, widen_factor=10, dropRate=0.0)
+    # model = WideResNet(depth=34, num_classes=10, widen_factor=10, dropRate=0.0)
+    model = models.resnet50(pretrained=True)
+    num_classes=10
+    model.fc = nn.Linear(model.fc.in_features, num_classes)
 
     attack = FastGradientSignUntargeted(model, 
                                         args.epsilon, 
@@ -218,7 +231,7 @@ def main(args):
                                        transform=transform_train, 
                                        download=True)
 
-        tr_loader = DataLoader(tr_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
+        tr_loader = DataLoader(tr_dataset, batch_size=args.batch_size, shuffle=True, num_workers=48)
 
         # evaluation during training
         te_dataset = tv.datasets.CIFAR10(args.data_root, 
@@ -226,7 +239,7 @@ def main(args):
                                        transform=tv.transforms.ToTensor(), 
                                        download=True)
 
-        te_loader = DataLoader(te_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+        te_loader = DataLoader(te_dataset, batch_size=args.batch_size, shuffle=False, num_workers=48)
 
         trainer.train(model, tr_loader, te_loader, args.adv_train)
     elif args.todo == 'test':
@@ -235,7 +248,7 @@ def main(args):
                                        transform=tv.transforms.ToTensor(), 
                                        download=True)
 
-        te_loader = DataLoader(te_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+        te_loader = DataLoader(te_dataset, batch_size=args.batch_size, shuffle=False, num_workers=48)
 
         checkpoint = torch.load(args.load_checkpoint)
         model.load_state_dict(checkpoint)

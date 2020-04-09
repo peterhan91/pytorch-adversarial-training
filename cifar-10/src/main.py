@@ -49,6 +49,8 @@ class Trainer():
                     # just start from the original data point.
                     adv_data = self.attack.perturb(data, label, 'mean', True)
                     # output = model(adv_data, _eval=False)
+                    # ????????? don't know if this is the case###########
+                    model.train()
                     output = model(adv_data)
                 else:
                     # output = model(data, _eval=False)
